@@ -1,0 +1,49 @@
+version: '3.7'
+services:
+  power-lines-accuracy-service:
+    build:
+      target: development
+    depends_on: 
+      - power-lines-message
+      - power-lines-accuracy-service-postgres
+    entrypoint: >
+      sh -c "
+        scripts/wait-for.sh power-lines-message:5672 --
+        scripts/wait-for.sh power-lines-accuracy-service-postgres:6003 --
+        dotnet watch --project ./PowerLinesAccuracyService run"
+    ports:
+      - "5003:5003"
+    environment:
+      ConnectionStrings__PowerLinesAccuracyService: "Server=power-lines-accuracy-service-postgres;Port=5432;Database=power_lines_accuracy;User Id=postgres;Password=postgres;"
+      Message__Host: power-lines-message
+    volumes:
+      - ./PowerLinesAccuracyService:/home/dotnet/PowerLinesAccuracyService
+      - ./PowerLinesAccuracyService.Tests:/home/dotnet/PowerLinesAccuracyService.Tests
+      - ./scripts:/home/dotnet/scripts
+
+  power-lines-message:
+    image: rabbitmq:3-management-alpine
+    container_name: power-lines-message
+    hostname: power-lines-message
+    environment:
+      RABBITMQ_ERLANG_COOKIE: rabbitmq
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: rabbitmq
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+
+  power-lines-accuracy-service-postgres:
+    image: postgres:11.4-alpine
+    environment:
+      POSTGRES_DB: power_lines_analysis
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "6003:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data: {}

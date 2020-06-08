@@ -1,0 +1,10 @@
+version: '3.7'
+services:
+  power-lines-accuracy-service:
+    build: 
+      context: .
+      target: development
+    image: power-lines-accuracy-service-test
+    container_name: power-lines-accuracy-service-test
+    entrypoint: dotnet test ./PowerLinesAccuracyService.Tests/PowerLinesAccuracyService.Tests.csproj
+    

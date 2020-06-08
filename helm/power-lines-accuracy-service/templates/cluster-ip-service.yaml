@@ -1,0 +1,3 @@
+{{- include "helm-library.cluster-ip-service" (list . "power-lines-accuracy-service.cluster-ip-service") -}}
+{{- define "power-lines-accuracy-service.cluster-ip-service" -}}
+{{- end -}}

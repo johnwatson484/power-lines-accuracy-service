@@ -1,0 +1,18 @@
+{{- include "helm-library.configmap" (list . "power-lines-accuracy-service.configmap") -}}
+{{- define "power-lines-accuracy-service.configmap" -}}
+data:
+  ConnectionStrings__PowerLinesAccuracyService: {{ quote .Values.container.connectionString }}
+  Message__Host: {{ quote .Values.message.host }}
+  Message__Port: {{ quote .Values.message.port }}
+  Message__AnalysisQueue: {{ quote .Values.message.analysisQueue }}
+  Message__AnalysisUsername: {{ quote .Values.message.analysisUsername }}
+  Message__AnalysisPassword: {{ quote .Values.message.analysisPassword }}
+  Message__ResultQueue: {{ quote .Values.message.resultQueue }}
+  Message__ResultUsername: {{ quote .Values.message.resultUsername }}
+  Message__ResultPassword: {{ quote .Values.message.resultPassword }}
+  Message__OddsQueue: {{ quote .Values.message.oddsQueue }}
+  Message__OddsUsername: {{ quote .Values.message.oddsUsername }}
+  Message__OddsPassword: {{ quote .Values.message.oddsPassword }}
+  COMPlus_EnableDiagnostics: {{ quote .Values.container.comPlusEnableDiagnostics }}
+  ASPNETCORE_ENVIRONMENT: {{ quote .Values.environment }}
+{{- end -}}
