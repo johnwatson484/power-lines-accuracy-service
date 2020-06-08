@@ -1,2 +1,2 @@
-# power-lines-accuracy-service
+# Power Lines Accuracy Service
 Accuracy service
