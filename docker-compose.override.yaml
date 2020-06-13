@@ -9,10 +9,10 @@ services:
     entrypoint: >
       sh -c "
         scripts/wait-for.sh power-lines-message:5672 --
-        scripts/wait-for.sh power-lines-accuracy-service-postgres:6003 --
+        scripts/wait-for.sh power-lines-accuracy-service-postgres:6001 --
         dotnet watch --project ./PowerLinesAccuracyService run"
     ports:
-      - "5003:5003"
+      - "5001:5001"
     environment:
       ConnectionStrings__PowerLinesAccuracyService: "Server=power-lines-accuracy-service-postgres;Port=5432;Database=power_lines_accuracy;User Id=postgres;Password=postgres;"
       Message__Host: power-lines-message
@@ -41,7 +41,7 @@ services:
       POSTGRES_USERNAME: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "6003:5432"
+      - "6001:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

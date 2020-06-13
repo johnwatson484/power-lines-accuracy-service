@@ -11,10 +11,13 @@ namespace PowerLinesAccuracyService.Messaging
         protected ConnectionFactory connectionFactory;
         protected RabbitMQ.Client.IConnection connection;
         protected IModel channel;
+        protected QueueType queueType;
         protected string queue;
+        protected string tempQueue;
 
-        public void CreateConnectionToQueue(string brokerUrl, string queue)
+        public void CreateConnectionToQueue(QueueType queueType, string brokerUrl, string queue)
         {
+            this.queueType = queueType;
             this.queue = queue;
             CreateConnectionFactory(brokerUrl);
             CreateConnection();
@@ -36,7 +39,7 @@ namespace PowerLinesAccuracyService.Messaging
                 var message = Encoding.UTF8.GetString(body);
                 messageAction(message);
             };
-            channel.BasicConsume(queue: queue,
+            channel.BasicConsume(queue: GetQueueName(),
                                  autoAck: true,
                                  consumer: consumer);
         }
@@ -60,11 +63,47 @@ namespace PowerLinesAccuracyService.Messaging
 
         private void CreateQueue()
         {
+            if(queueType == QueueType.Worker)
+            {
+                CreateWorkerQueue();
+            }
+            else
+            {
+                CreateExchange();
+                BindQueue();
+            }
+        }
+
+        private void CreateWorkerQueue()
+        {
             channel.QueueDeclare(queue: queue,
                                  durable: true,
                                  exclusive: false,
                                  autoDelete: false,
                                  arguments: null);
+        }
+
+        private void CreateExchange()
+        {
+            channel.ExchangeDeclare(queue, queueType == QueueType.ExchangeDirect ? ExchangeType.Direct : ExchangeType.Fanout, true, false);
+        }
+        
+        private void BindQueue()
+        {
+            tempQueue = channel.QueueDeclare().QueueName;
+            channel.QueueBind(queue: tempQueue,
+                              exchange: queue,
+                              routingKey: GetExchangeRoutingKey());
+        }
+
+        private string GetQueueName()
+        {
+            return queueType == QueueType.Worker ? queue : tempQueue;
+        }
+
+        private string GetExchangeRoutingKey()
+        {
+            return queueType == QueueType.ExchangeDirect ? "power-lines-accuracy-service" : "";
         }
     }
 }

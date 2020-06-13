@@ -1,10 +1,9 @@
-using System.Collections.Generic;
-using PowerLinesAccuracyService.Models;
+using System;
 
 namespace PowerLinesAccuracyService.Analysis
 {
     public interface IAnalysisService
     {
-        MatchOdds GetMatchOdds(Fixture fixture, List<Result> historicResults = null);
+        void GetMatchOdds(object state);
     }
 }

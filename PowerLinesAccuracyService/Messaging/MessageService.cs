@@ -8,21 +8,22 @@ using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using PowerLinesAccuracyService.Analysis;
+using PowerLinesAccuracyService.Accuracy;
 
 namespace PowerLinesAccuracyService.Messaging
 {
     public class MessageService : BackgroundService, IMessageService
     {
         private IConsumer resultsConsumer;
-        private IConsumer analysisConsumer;
+        private IConsumer oddsConsumer;
         private MessageConfig messageConfig;
         private IServiceScopeFactory serviceScopeFactory;
         private ISender sender;
 
-        public MessageService(IConsumer resultsConsumer, IConsumer analysisConsumer, ISender sender, MessageConfig messageConfig, IServiceScopeFactory serviceScopeFactory)
+        public MessageService(IConsumer resultsConsumer, IConsumer oddsConsumer, ISender sender, MessageConfig messageConfig, IServiceScopeFactory serviceScopeFactory)
         {
             this.resultsConsumer = resultsConsumer;
-            this.analysisConsumer = analysisConsumer;
+            this.oddsConsumer = oddsConsumer;
             this.messageConfig = messageConfig;
             this.serviceScopeFactory = serviceScopeFactory;
             this.sender = sender;
@@ -38,7 +39,7 @@ namespace PowerLinesAccuracyService.Messaging
         {
             CreateConnectionToQueue();
             resultsConsumer.Listen(new Action<string>(ReceiveResultMessage));
-            analysisConsumer.Listen(new Action<string>(ReceiveAnalysisMessage));
+            oddsConsumer.Listen(new Action<string>(ReceiveOddsMessage));
         }
 
         public void CreateConnectionToQueue()
@@ -46,11 +47,11 @@ namespace PowerLinesAccuracyService.Messaging
             sender.CreateConnectionToQueue(new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.OddsUsername, messageConfig.OddsPassword).ToString(),
                 messageConfig.OddsQueue);
 
-            resultsConsumer.CreateConnectionToQueue(new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.ResultUsername, messageConfig.ResultPassword).ToString(),
+            resultsConsumer.CreateConnectionToQueue(QueueType.ExchangeFanout, new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.ResultUsername, messageConfig.ResultPassword).ToString(),
                 messageConfig.ResultQueue);
 
-            analysisConsumer.CreateConnectionToQueue(new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.AnalysisUsername, messageConfig.AnalysisPassword).ToString(),
-                messageConfig.AnalysisQueue);
+            oddsConsumer.CreateConnectionToQueue(QueueType.ExchangeDirect, new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.OddsUsername, messageConfig.OddsPassword).ToString(),
+                messageConfig.OddsQueue);
         }
 
         private void ReceiveResultMessage(string message)
@@ -71,21 +72,15 @@ namespace PowerLinesAccuracyService.Messaging
             }
         }
 
-        private void ReceiveAnalysisMessage(string message)
+        private void ReceiveOddsMessage(string message)
         {
-            var fixture = JsonConvert.DeserializeObject<Fixture>(message);
+            var matchOdds = JsonConvert.DeserializeObject<MatchOdds>(message);
             using (var scope = serviceScopeFactory.CreateScope())
             {
-                var analysisService = scope.ServiceProvider.GetRequiredService<IAnalysisService>();
-                try
-                {
-                    var matchOdds = analysisService.GetMatchOdds(fixture);
-                    sender.SendMessage(matchOdds);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Unable to calculate match odds for {0} v {1}: {2}", fixture.HomeTeam, fixture.AwayTeam, ex);
-                }
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                dbContext.MatchOdds.Upsert(matchOdds)
+                    .On(x => new { x.ResultId })
+                    .Run();
             }
         }
     }

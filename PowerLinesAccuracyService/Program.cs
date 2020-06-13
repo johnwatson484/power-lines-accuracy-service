@@ -28,6 +28,7 @@ namespace PowerLinesAccuracyService
                 .ConfigureServices(services =>
                 {
                     services.AddHostedService<MessageService>();
+                    services.AddHostedService<AnalysisService>();
                     services.AddHostedService<AccuracyService>();
                 });
     }

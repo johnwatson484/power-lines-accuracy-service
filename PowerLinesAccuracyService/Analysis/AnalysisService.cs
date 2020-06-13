@@ -1,147 +1,107 @@
 using System;
-using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using PowerLinesAccuracyService.Data;
 using PowerLinesAccuracyService.Models;
-using PowerLinesAccuracyService.Extensions;
+using System.Collections.Generic;
+using PowerLinesAccuracyService.Messaging;
 using Microsoft.EntityFrameworkCore;
+using PowerLinesAccuracyService.Analysis;
 
-namespace PowerLinesAccuracyService.Analysis
+namespace PowerLinesAccuracyService.Accuracy
 {
-    public class AnalysisService : IAnalysisService
+    public class AnalysisService : BackgroundService, IAnalysisService
     {
-        ApplicationDbContext dbContext;
-        Threshold threshold;
-        const int yearsToAnalyse = 6;
-        const int maxGoalsPerGame = 5;
-        DateTime startDate;
-        List<Result> matches;
-        decimal homeExpectedGoals;
-        decimal awayExpectedGoals;
-        GoalDistribution goalDistribution;
-        Poisson poisson;
-        OddsCalculator oddsService;
+        private IServiceScopeFactory serviceScopeFactory;
+        private IAnalysisApi analysisApi;
+        private MessageConfig messageConfig;
+        private Timer timer;
+        private int frequencyInMinutes;
+        private ISender sender;
 
-        public AnalysisService(ApplicationDbContext dbContext, Threshold threshold)
+        public AnalysisService(IServiceScopeFactory serviceScopeFactory, IAnalysisApi analysisApi, MessageConfig messageConfig, int frequencyInMinutes = 1440)
         {
-            this.dbContext = dbContext;
-            this.threshold = threshold;
-            goalDistribution = new GoalDistribution();
-            poisson = new Poisson();
+            this.serviceScopeFactory = serviceScopeFactory;
+            this.analysisApi = analysisApi;
+            this.messageConfig = messageConfig;
+            this.frequencyInMinutes = frequencyInMinutes;
         }
 
-        public MatchOdds GetMatchOdds(Fixture fixture, List<Result> historicResults = null)
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            SetStartDate(fixture.Date);
-            SetAnalysisMatches(fixture.Division, historicResults);
-
-            CalculateExpectedGoals(fixture);
-            CalculateGoalDistribution();
-
-            oddsService = new OddsCalculator(fixture.FixtureId, goalDistribution, threshold);
-            return oddsService.GetMatchOdds();
+            timer = new Timer(GetMatchOdds, null, TimeSpan.Zero, TimeSpan.FromMinutes(frequencyInMinutes));
+            return Task.CompletedTask;
         }
 
-        private void SetStartDate(DateTime fixtureDate)
+        public void GetMatchOdds(object state)
         {
-            startDate = fixtureDate.AddYears(-6).Date;
-        }
+            var lastResultDate = GetLastResultDate();
 
-        private void SetAnalysisMatches(string division, List<Result> historicResults = null)
-        {
-            if (historicResults == null)
+            if (lastResultDate.HasValue)
             {
-                matches = dbContext.Results.AsNoTracking().Where(x => x.Division == division && x.Date >= startDate).ToList();
-            }
-            else
-            {
-                matches = historicResults.Where(x => x.Division == division && x.Date >= startDate).ToList();
+                CheckPendingAccuracy(lastResultDate.Value);
             }
         }
 
-        private void CalculateExpectedGoals(Fixture fixture)
+        private DateTime? GetLastResultDate()
         {
-            var totalAverageHomeGoals = GetTotalAverageHomeGoals();
-            var totalAverageAwayGoals = GetTotalAverageAwayGoals();
-            var totalAverageHomeConceded = totalAverageAwayGoals;
-            var totalAverageAwayConceded = totalAverageHomeGoals;
-
-            var averageHomeGoals = GetAverageHomeGoals(fixture.HomeTeam);
-            var homeAttackStrength = GetAttackStrength(averageHomeGoals, totalAverageHomeGoals);
-            var averageAwayConceded = GetAverageAwayConceded(fixture.AwayTeam);
-            var awayDefenceStrength = GetDefenceStrength(averageAwayConceded, totalAverageAwayConceded);
-            homeExpectedGoals = GetExpectedGoals(homeAttackStrength, awayDefenceStrength, totalAverageHomeGoals);
-
-            var averageAwayGoals = GetAverageAwayGoals(fixture.AwayTeam);
-            var awayAttackStrength = GetAttackStrength(averageAwayGoals, totalAverageAwayGoals);
-            var averageHomeConceded = GetAverageHomeConceded(fixture.HomeTeam);
-            var homeDefenceStrength = GetDefenceStrength(averageHomeConceded, totalAverageHomeConceded);
-            awayExpectedGoals = GetExpectedGoals(awayAttackStrength, homeDefenceStrength, totalAverageAwayGoals);
+            return Task.Run(() => analysisApi.GetLastResultDate()).Result;
         }
 
-        private decimal GetTotalAverageHomeGoals()
+        public void CheckPendingAccuracy(DateTime lastResultDate)
         {
-            return DecimalExtensions.SafeDivide(matches.Sum(x => x.FullTimeHomeGoals), matches.Count);
-        }
-
-        private decimal GetTotalAverageAwayGoals()
-        {
-            return DecimalExtensions.SafeDivide(matches.Sum(x => x.FullTimeAwayGoals), matches.Count);
-        }
-
-        private decimal GetAverageHomeGoals(string homeTeam)
-        {
-            var homeMatches = matches.Where(x => x.HomeTeam == homeTeam).ToList();
-            return DecimalExtensions.SafeDivide(homeMatches.Sum(x => x.FullTimeHomeGoals), homeMatches.Count);
-        }
-
-        private decimal GetAverageAwayGoals(string awayTeam)
-        {
-            var awayMatches = matches.Where(x => x.AwayTeam == awayTeam).ToList();
-            return DecimalExtensions.SafeDivide(awayMatches.Sum(x => x.FullTimeAwayGoals), awayMatches.Count);
-        }
-
-        private decimal GetAverageHomeConceded(string homeTeam)
-        {
-            var homeMatches = matches.Where(x => x.HomeTeam == homeTeam).ToList();
-            return DecimalExtensions.SafeDivide(homeMatches.Sum(x => x.FullTimeAwayGoals), homeMatches.Count);
-        }
-
-        private decimal GetAverageAwayConceded(string awayTeam)
-        {
-            var awayMatches = matches.Where(x => x.AwayTeam == awayTeam).ToList();
-            return DecimalExtensions.SafeDivide(awayMatches.Sum(x => x.FullTimeHomeGoals), awayMatches.Count);
-        }
-
-        private decimal GetAttackStrength(decimal averageGoals, decimal totalAverageGoals)
-        {
-            return DecimalExtensions.SafeDivide(averageGoals, totalAverageGoals);
-        }
-
-        private decimal GetDefenceStrength(decimal averageConceded, decimal totalAverageConceded)
-        {
-            return DecimalExtensions.SafeDivide(averageConceded, totalAverageConceded);
-        }
-
-        private decimal GetExpectedGoals(decimal teamAttackStrength, decimal oppositionDefenceStrength, decimal totalAverageGoals)
-        {
-            return teamAttackStrength * oppositionDefenceStrength * totalAverageGoals;
-        }
-
-        private void CalculateGoalDistribution()
-        {
-            for (int goals = 0; goals <= maxGoalsPerGame; goals++)
+            DateTime startDate = new DateTime(DateTime.UtcNow.Year - 3, 9, 1);
+            List<Result> pendingResults;
+            using (var scope = serviceScopeFactory.CreateScope())
             {
-                goalDistribution.HomeGoalProbabilities.Add(GetGoalProbability(goals, homeExpectedGoals));
-                goalDistribution.AwayGoalProbabilities.Add(GetGoalProbability(goals, awayExpectedGoals));
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                pendingResults = dbContext.Results.AsNoTracking().Where(x => x.Date >= startDate && (x.MatchOdds == null || x.MatchOdds.Calculated < lastResultDate)).ToList();
             }
 
-            goalDistribution.CalculateDistribution();
+            if (pendingResults.Count > 0)
+            {
+                SendFixturesForAnalysis(ConvertResultsToFixtures(pendingResults));
+            }
         }
 
-        private GoalProbability GetGoalProbability(int goals, decimal expectedGoals)
+        public List<Fixture> ConvertResultsToFixtures(List<Result> results)
         {
-            return new GoalProbability(goals, (decimal)poisson.GetProbability(goals, (double)expectedGoals));
+            List<Fixture> fixtures = new List<Fixture>();
+
+            foreach(var result in results)
+            {
+                fixtures.Add(new Fixture
+                {
+                    Date = result.Date,
+                    Division = result.Division,
+                    HomeTeam = result.HomeTeam,
+                    AwayTeam = result.AwayTeam
+                });
+            }
+
+            return fixtures;
+        }
+
+        public void SendFixturesForAnalysis(List<Fixture> fixtures)
+        {
+            sender = new Sender();
+            CreateConnectionToQueue();
+
+            foreach (var fixture in fixtures)
+            {
+                sender.SendMessage(new AnalysisMessage(fixture));
+            }
+        }
+
+        public void CreateConnectionToQueue()
+        {
+            Task.Run(() =>
+                sender.CreateConnectionToQueue(new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.AnalysisUsername, messageConfig.AnalysisPassword).ToString(),
+                    messageConfig.AnalysisQueue))
+            .Wait();
         }
     }
 }

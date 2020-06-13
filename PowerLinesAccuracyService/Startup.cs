@@ -36,13 +36,13 @@ namespace PowerLinesAccuracyService
 
             var messageConfig = Configuration.GetSection("Message").Get<MessageConfig>();
             services.AddSingleton(messageConfig);
-            var threshold = Configuration.GetSection("Threshold").Get<Threshold>();
-            services.AddSingleton(threshold);
-            
+
+            var analysisUrl = Configuration.GetSection("AnalysisUrl").Get<AnalysisUrl>();
+            services.AddSingleton(analysisUrl);
+
+            services.AddSingleton<IAnalysisApi, AnalysisApi>();            
             services.AddTransient<IConsumer, Consumer>();
-            services.AddSingleton<ISender, Sender>();
-            services.AddScoped<IAccuracyCalculator, AccuracyCalculator>();
-            services.AddScoped<IAnalysisService, AnalysisService>();         
+            services.AddSingleton<ISender, Sender>();  
             services.AddControllers();
         }
 

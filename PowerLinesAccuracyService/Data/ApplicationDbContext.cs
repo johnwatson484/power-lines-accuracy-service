@@ -10,6 +10,7 @@ namespace PowerLinesAccuracyService.Data
         {
         }
         public DbSet<Result> Results { get; set; }
+        public DbSet<MatchOdds> MatchOdds { get; set; }
         public DbSet<Models.Accuracy> Accuracy { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

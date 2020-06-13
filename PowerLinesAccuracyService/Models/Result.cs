@@ -51,6 +51,8 @@ namespace PowerLinesAccuracyService.Models
         [Column("created")]
         public DateTime Created { get; set; }
 
+        public virtual MatchOdds MatchOdds { get; set; }
+
         public Result()
         {
             Created = DateTime.UtcNow;

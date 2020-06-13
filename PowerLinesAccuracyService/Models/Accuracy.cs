@@ -29,10 +29,5 @@ namespace PowerLinesAccuracyService.Models
 
         [Column("calculated")]
         public DateTime Calculated { get; set; }
-
-        public Accuracy()
-        {
-            Calculated = DateTime.UtcNow;
-        }
     }
 }
