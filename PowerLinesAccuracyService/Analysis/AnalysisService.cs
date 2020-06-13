@@ -22,7 +22,7 @@ namespace PowerLinesAccuracyService.Accuracy
         private int frequencyInMinutes;
         private ISender sender;
 
-        public AnalysisService(IServiceScopeFactory serviceScopeFactory, IAnalysisApi analysisApi, MessageConfig messageConfig, int frequencyInMinutes = 1440)
+        public AnalysisService(IServiceScopeFactory serviceScopeFactory, IAnalysisApi analysisApi, MessageConfig messageConfig, int frequencyInMinutes = 1)
         {
             this.serviceScopeFactory = serviceScopeFactory;
             this.analysisApi = analysisApi;

@@ -15,4 +15,5 @@ data:
   Message__OddsPassword: {{ quote .Values.message.oddsPassword }}
   COMPlus_EnableDiagnostics: {{ quote .Values.container.comPlusEnableDiagnostics }}
   ASPNETCORE_ENVIRONMENT: {{ quote .Values.environment }}
+  AnalysisUrl__Endpoint: {{ quote .Values.container.analysisEndpoint }}
 {{- end -}}

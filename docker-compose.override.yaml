@@ -16,6 +16,7 @@ services:
     environment:
       ConnectionStrings__PowerLinesAccuracyService: "Server=power-lines-accuracy-service-postgres;Port=5432;Database=power_lines_accuracy;User Id=postgres;Password=postgres;"
       Message__Host: power-lines-message
+      AnalysisUrl__Endpoint: http://power-lines-analysis-service:5003
     volumes:
       - ./PowerLinesAccuracyService:/home/dotnet/PowerLinesAccuracyService
       - ./PowerLinesAccuracyService.Tests:/home/dotnet/PowerLinesAccuracyService.Tests
@@ -37,7 +38,7 @@ services:
   power-lines-accuracy-service-postgres:
     image: postgres:11.4-alpine
     environment:
-      POSTGRES_DB: power_lines_analysis
+      POSTGRES_DB: power_lines_accuracy
       POSTGRES_USERNAME: postgres
       POSTGRES_PASSWORD: postgres
     ports:

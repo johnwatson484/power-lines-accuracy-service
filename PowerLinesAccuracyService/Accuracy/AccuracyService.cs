@@ -68,7 +68,7 @@ namespace PowerLinesAccuracyService.Accuracy
 
         private void CalculateAccuracyIfPending(DateTime? lastOddsDate, DateTime? accuracyCalculatedDate)
         {
-            if (!lastOddsDate.HasValue || accuracyCalculatedDate.Value > lastOddsDate.Value.AddMinutes(-10))
+            if (!lastOddsDate.HasValue || (lastOddsDate.Value > DateTime.UtcNow.AddMinutes(-10)))
             {
                 return;
             }

@@ -13,6 +13,7 @@ container:
   allowPrivilegeEscalation: false
   comPlusEnableDiagnostics: 0
   connectionString: "User Id=postgres;Password=postgres;Server=power-lines-accuracy-service-postgres;Port=5432;Database=Database=power_lines_accuracy;"
+  analysisEndpoint: http://power-lines-analysis-service:5003
 
 postgresService:
   postgresHost: power-lines-accuracy-service-postgres
