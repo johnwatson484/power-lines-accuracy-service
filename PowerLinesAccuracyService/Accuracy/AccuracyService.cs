@@ -20,7 +20,7 @@ namespace PowerLinesAccuracyService.Accuracy
         private Timer timer;
         private int frequencyInMinutes;
 
-        public AccuracyService(IServiceScopeFactory serviceScopeFactory, int frequencyInMinutes = 1440)
+        public AccuracyService(IServiceScopeFactory serviceScopeFactory, int frequencyInMinutes = 10)
         {
             this.serviceScopeFactory = serviceScopeFactory;
             this.frequencyInMinutes = frequencyInMinutes;

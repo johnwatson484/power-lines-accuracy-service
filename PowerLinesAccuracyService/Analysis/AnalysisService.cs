@@ -22,7 +22,7 @@ namespace PowerLinesAccuracyService.Accuracy
         private int frequencyInMinutes;
         private ISender sender;
 
-        public AnalysisService(IServiceScopeFactory serviceScopeFactory, IAnalysisApi analysisApi, MessageConfig messageConfig, int frequencyInMinutes = 1)
+        public AnalysisService(IServiceScopeFactory serviceScopeFactory, IAnalysisApi analysisApi, MessageConfig messageConfig, int frequencyInMinutes = 1440)
         {
             this.serviceScopeFactory = serviceScopeFactory;
             this.analysisApi = analysisApi;
@@ -38,6 +38,13 @@ namespace PowerLinesAccuracyService.Accuracy
 
         public void GetMatchOdds(object state)
         {
+            var lastResultDateLocal = GetLastResultDateLocal();
+
+            if (lastResultDateLocal == null || (lastResultDateLocal.Value > DateTime.UtcNow.AddMinutes(-10)))
+            {
+                return;
+            }
+
             var lastResultDate = GetLastResultDate();
 
             if (lastResultDate.HasValue)
@@ -49,6 +56,15 @@ namespace PowerLinesAccuracyService.Accuracy
         private DateTime? GetLastResultDate()
         {
             return Task.Run(() => analysisApi.GetLastResultDate()).Result;
+        }
+
+        private DateTime? GetLastResultDateLocal()
+        {
+            using (var scope = serviceScopeFactory.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                return dbContext.Results.AsNoTracking().OrderByDescending(x => x.Created).Select(x => x.Created).FirstOrDefault();
+            }
         }
 
         public void CheckPendingAccuracy(DateTime lastResultDate)
@@ -71,7 +87,7 @@ namespace PowerLinesAccuracyService.Accuracy
         {
             List<Fixture> fixtures = new List<Fixture>();
 
-            foreach(var result in results)
+            foreach (var result in results)
             {
                 fixtures.Add(new Fixture
                 {
