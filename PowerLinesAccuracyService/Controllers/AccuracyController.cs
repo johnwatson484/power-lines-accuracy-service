@@ -19,7 +19,6 @@ namespace PowerLinesAccuracyService.Controllers
             this.dbContext = dbContext;
         }
 
-        [Route("[action]")]
         public ActionResult<IEnumerable<Models.Accuracy>> Get()
         {
             return dbContext.Accuracy.OrderBy(x => x.Division).ToList();
