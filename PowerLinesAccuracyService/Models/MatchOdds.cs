@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PowerLinesAccuracyService.Models
 {
+    [Table("match_odds")]
     public class MatchOdds
     {
         [Column("matchOddsId")]

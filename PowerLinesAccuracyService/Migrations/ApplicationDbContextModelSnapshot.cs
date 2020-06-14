@@ -113,7 +113,7 @@ namespace PowerLinesAccuracyService.Migrations
                     b.HasIndex("ResultId")
                         .IsUnique();
 
-                    b.ToTable("MatchOdds");
+                    b.ToTable("match_odds");
                 });
 
             modelBuilder.Entity("PowerLinesAccuracyService.Models.Result", b =>

@@ -74,6 +74,7 @@ namespace PowerLinesAccuracyService.Messaging
 
         private void ReceiveOddsMessage(string message)
         {
+            Console.WriteLine("New match odds received: {0}", message);
             var matchOdds = JsonConvert.DeserializeObject<MatchOdds>(message);
             using (var scope = serviceScopeFactory.CreateScope())
             {

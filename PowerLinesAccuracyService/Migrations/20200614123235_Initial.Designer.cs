@@ -10,7 +10,7 @@ using PowerLinesAccuracyService.Data;
 namespace PowerLinesAccuracyService.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20200613220538_Initial")]
+    [Migration("20200614123235_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -115,7 +115,7 @@ namespace PowerLinesAccuracyService.Migrations
                     b.HasIndex("ResultId")
                         .IsUnique();
 
-                    b.ToTable("MatchOdds");
+                    b.ToTable("match_odds");
                 });
 
             modelBuilder.Entity("PowerLinesAccuracyService.Models.Result", b =>

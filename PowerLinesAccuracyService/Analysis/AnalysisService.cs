@@ -91,6 +91,7 @@ namespace PowerLinesAccuracyService.Accuracy
             {
                 fixtures.Add(new Fixture
                 {
+                    FixtureId = result.ResultId,
                     Date = result.Date,
                     Division = result.Division,
                     HomeTeam = result.HomeTeam,

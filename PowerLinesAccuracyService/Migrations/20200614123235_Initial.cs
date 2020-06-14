@@ -54,7 +54,7 @@ namespace PowerLinesAccuracyService.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "MatchOdds",
+                name: "match_odds",
                 columns: table => new
                 {
                     matchOddsId = table.Column<int>(nullable: false)
@@ -72,9 +72,9 @@ namespace PowerLinesAccuracyService.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_MatchOdds", x => x.matchOddsId);
+                    table.PrimaryKey("PK_match_odds", x => x.matchOddsId);
                     table.ForeignKey(
-                        name: "FK_MatchOdds_results_resultId",
+                        name: "FK_match_odds_results_resultId",
                         column: x => x.resultId,
                         principalTable: "results",
                         principalColumn: "resultId",
@@ -82,8 +82,8 @@ namespace PowerLinesAccuracyService.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_MatchOdds_resultId",
-                table: "MatchOdds",
+                name: "IX_match_odds_resultId",
+                table: "match_odds",
                 column: "resultId",
                 unique: true);
 
@@ -100,7 +100,7 @@ namespace PowerLinesAccuracyService.Migrations
                 name: "accuracy");
 
             migrationBuilder.DropTable(
-                name: "MatchOdds");
+                name: "match_odds");
 
             migrationBuilder.DropTable(
                 name: "results");
