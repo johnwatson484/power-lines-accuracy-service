@@ -22,7 +22,7 @@ namespace PowerLinesAccuracyService.Controllers
         [Route("[action]")]
         public ActionResult<IEnumerable<Models.Accuracy>> Get()
         {
-            return dbContext.Accuracy;
+            return dbContext.Accuracy.OrderBy(x => x.Division).ToList();
         }
     }
 }

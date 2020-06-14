@@ -17,6 +17,9 @@ namespace PowerLinesAccuracyService.Data
         {
             modelBuilder.Entity<Result>()
                 .HasIndex(x => new { x.Date, x.HomeTeam, x.AwayTeam }).IsUnique();
+            
+            modelBuilder.Entity<Models.Accuracy>()
+                .HasIndex(x => new { x.Division }).IsUnique();
         }
     }
 }

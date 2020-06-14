@@ -58,7 +58,7 @@ namespace PowerLinesAccuracyService.Models
             }
         }
 
-        public MatchOdds()
+        public void SetResultId()
         {
             ResultId = FixtureId;
         }

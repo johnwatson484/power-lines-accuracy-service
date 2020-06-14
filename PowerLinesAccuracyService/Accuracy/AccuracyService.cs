@@ -20,7 +20,7 @@ namespace PowerLinesAccuracyService.Accuracy
         private Timer timer;
         private int frequencyInMinutes;
 
-        public AccuracyService(IServiceScopeFactory serviceScopeFactory, int frequencyInMinutes = 10)
+        public AccuracyService(IServiceScopeFactory serviceScopeFactory, int frequencyInMinutes = 5)
         {
             this.serviceScopeFactory = serviceScopeFactory;
             this.frequencyInMinutes = frequencyInMinutes;
@@ -47,7 +47,7 @@ namespace PowerLinesAccuracyService.Accuracy
             using (var scope = serviceScopeFactory.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                return dbContext.MatchOdds.AsNoTracking().OrderBy(x => x.Calculated).Select(x => x.Calculated).FirstOrDefault();
+                return dbContext.MatchOdds.AsNoTracking().OrderByDescending(x => x.Calculated).Select(x => x.Calculated).FirstOrDefault();
             }
         }
 
@@ -62,13 +62,13 @@ namespace PowerLinesAccuracyService.Accuracy
             using (var scope = serviceScopeFactory.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                return dbContext.Accuracy.AsNoTracking().OrderBy(x => x.Calculated).Select(x => x.Calculated).FirstOrDefault();
+                return dbContext.Accuracy.AsNoTracking().OrderByDescending(x => x.Calculated).Select(x => x.Calculated).FirstOrDefault();
             }
         }
 
         private void CalculateAccuracyIfPending(DateTime? lastOddsDate, DateTime? accuracyCalculatedDate)
         {
-            if (!lastOddsDate.HasValue || (lastOddsDate.Value > DateTime.UtcNow.AddMinutes(-10)))
+            if (!lastOddsDate.HasValue || (lastOddsDate.Value > DateTime.UtcNow.AddMinutes(-5)))
             {
                 return;
             }
@@ -83,26 +83,26 @@ namespace PowerLinesAccuracyService.Accuracy
             using (var scope = serviceScopeFactory.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                var divisions = dbContext.Results.AsNoTracking().Select(x=>x.Division).Distinct().ToList();
+                var divisions = dbContext.Results.AsNoTracking().Select(x => x.Division).Distinct().ToList();
 
                 foreach (var division in divisions)
                 {
-                    var testResults = dbContext.Results.AsNoTracking().Where(x=>x.MatchOdds != null).ToList();
-                    
+                    var testResults = dbContext.Results.AsNoTracking().Include(x => x.MatchOdds).Where(x => x.Division == division && x.MatchOdds != null).ToList();
+
                     var accuracy = new Models.Accuracy();
                     accuracy.Division = division;
                     accuracy.Matches = testResults.Count();
                     accuracy.Recommended = testResults.Where(x => x.MatchOdds.IsRecommended).Count();
                     accuracy.LowerRecommended = testResults.Where(x => x.MatchOdds.IsLowerRecommended).Count();
-                    accuracy.RecommendedAccuracy = DecimalExtensions.SafeDivide(testResults.Where(x => x.MatchOdds.Recommended == x.FullTimeResult).Count(), accuracy.Recommended);
-                    accuracy.LowerRecommendedAccuracy = DecimalExtensions.SafeDivide(testResults.Where(x => x.MatchOdds.LowerRecommended == x.FullTimeResult).Count(), accuracy.LowerRecommended);
+                    accuracy.RecommendedAccuracy = Math.Round(DecimalExtensions.SafeDivide(testResults.Where(x => x.MatchOdds.Recommended == x.FullTimeResult).Count(), accuracy.Recommended), 2);
+                    accuracy.LowerRecommendedAccuracy = Math.Round(DecimalExtensions.SafeDivide(testResults.Where(x => x.MatchOdds.LowerRecommended == x.FullTimeResult).Count(), accuracy.LowerRecommended), 2);
                     accuracy.Calculated = DateTime.UtcNow;
-                
+
                     dbContext.Accuracy.Upsert(accuracy)
                         .On(x => new { x.Division })
                         .Run();
                 }
             }
-        }        
+        }
     }
 }

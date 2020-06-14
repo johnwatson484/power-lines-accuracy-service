@@ -22,7 +22,7 @@ namespace PowerLinesAccuracyService.Accuracy
         private int frequencyInMinutes;
         private ISender sender;
 
-        public AnalysisService(IServiceScopeFactory serviceScopeFactory, IAnalysisApi analysisApi, MessageConfig messageConfig, int frequencyInMinutes = 1440)
+        public AnalysisService(IServiceScopeFactory serviceScopeFactory, IAnalysisApi analysisApi, MessageConfig messageConfig, int frequencyInMinutes = 60)
         {
             this.serviceScopeFactory = serviceScopeFactory;
             this.analysisApi = analysisApi;
@@ -74,7 +74,7 @@ namespace PowerLinesAccuracyService.Accuracy
             using (var scope = serviceScopeFactory.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                pendingResults = dbContext.Results.AsNoTracking().Where(x => x.Date >= startDate && (x.MatchOdds == null || x.MatchOdds.Calculated < lastResultDate)).ToList();
+                pendingResults = dbContext.Results.AsNoTracking().Include(x => x.MatchOdds).Where(x => x.Date >= startDate && (x.MatchOdds == null || x.MatchOdds.Calculated < lastResultDate)).ToList();
             }
 
             if (pendingResults.Count > 0)
