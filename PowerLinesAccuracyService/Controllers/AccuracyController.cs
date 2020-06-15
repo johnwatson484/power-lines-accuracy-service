@@ -5,6 +5,7 @@ using PowerLinesAccuracyService.Data;
 using System.Linq;
 using PowerLinesAccuracyService.Models;
 using Microsoft.EntityFrameworkCore;
+using PowerLinesAccuracyService.Accuracy;
 
 namespace PowerLinesAccuracyService.Controllers
 {
@@ -12,16 +13,16 @@ namespace PowerLinesAccuracyService.Controllers
     [Route("[controller]")]
     public class AccuracyController : ControllerBase
     {
-        private readonly ApplicationDbContext dbContext;
+        IAccuracyApi accuracyApi;
 
-        public AccuracyController(ApplicationDbContext dbContext)
+        public AccuracyController(IAccuracyApi accuracyApi)
         {
-            this.dbContext = dbContext;
+            this.accuracyApi = accuracyApi;
         }
 
-        public ActionResult<IEnumerable<Models.Accuracy>> Get()
+        public ActionResult<IEnumerable<AccuracyResponse>> Get()
         {
-            return dbContext.Accuracy.OrderBy(x => x.Division).ToList();
+            return accuracyApi.Get();
         }
     }
 }

@@ -43,6 +43,7 @@ namespace PowerLinesAccuracyService
             services.AddSingleton<IAnalysisApi, AnalysisApi>();            
             services.AddTransient<IConsumer, Consumer>();
             services.AddSingleton<ISender, Sender>();  
+            services.AddScoped<IAccuracyApi, AccuracyApi>();
             services.AddControllers();
         }
 
