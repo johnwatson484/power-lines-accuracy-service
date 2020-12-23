@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using PowerLinesAccuracyService.Messaging;
 using Microsoft.EntityFrameworkCore;
 using PowerLinesAccuracyService.Analysis;
+using PowerLinesMessaging;
 
 namespace PowerLinesAccuracyService.Accuracy
 {
@@ -116,7 +117,7 @@ namespace PowerLinesAccuracyService.Accuracy
         public void CreateConnectionToQueue()
         {
             Task.Run(() =>
-                sender.CreateConnectionToQueue(new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.AnalysisUsername, messageConfig.AnalysisPassword).ToString(),
+                sender.CreateConnectionToQueue(QueueType.Worker, new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.AnalysisUsername, messageConfig.AnalysisPassword).ToString(),
                     messageConfig.AnalysisQueue))
             .Wait();
         }
