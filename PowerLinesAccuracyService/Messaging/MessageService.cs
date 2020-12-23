@@ -50,7 +50,7 @@ namespace PowerLinesAccuracyService.Messaging
                 messageConfig.ResultQueue);
 
             oddsConsumer.CreateConnectionToQueue(QueueType.ExchangeDirect, new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.OddsUsername, messageConfig.OddsPassword).ToString(),
-                messageConfig.OddsQueue);
+                messageConfig.OddsQueue, "power-lines-accuracy-service");
         }
 
         private void ReceiveResultMessage(string message)
