@@ -46,10 +46,10 @@ namespace PowerLinesAccuracyService.Messaging
             sender.CreateConnectionToQueue(QueueType.Worker, new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.OddsUsername, messageConfig.OddsPassword).ToString(),
                 messageConfig.OddsQueue);
 
-            resultsConsumer.CreateConnectionToQueue(QueueType.Exchange, new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.ResultUsername, messageConfig.ResultPassword).ToString(),
+            resultsConsumer.CreateConnectionToQueue(QueueType.ExchangeFanout, new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.ResultUsername, messageConfig.ResultPassword).ToString(),
                 messageConfig.ResultQueue);
 
-            oddsConsumer.CreateConnectionToQueue(QueueType.Worker, new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.OddsUsername, messageConfig.OddsPassword).ToString(),
+            oddsConsumer.CreateConnectionToQueue(QueueType.ExchangeDirect, new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.OddsUsername, messageConfig.OddsPassword).ToString(),
                 messageConfig.OddsQueue);
         }
 
