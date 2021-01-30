@@ -43,14 +43,32 @@ namespace PowerLinesAccuracyService.Messaging
 
         public void CreateConnectionToQueue()
         {
-            sender.CreateConnectionToQueue(QueueType.Worker, new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.OddsUsername, messageConfig.OddsPassword).ToString(),
-                messageConfig.OddsQueue);
+            var resultOptions = new ConsumerOptions
+            {
+                Host = messageConfig.Host,
+                Port = messageConfig.Port,
+                Username = messageConfig.ResultUsername,
+                Password = messageConfig.ResultPassword,
+                QueueName = messageConfig.ResultQueue,
+                SubscriptionQueueName = "power-lines-results-accuracy",
+                QueueType = QueueType.ExchangeFanout            
+            };
 
-            resultsConsumer.CreateConnectionToQueue(QueueType.ExchangeFanout, new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.ResultUsername, messageConfig.ResultPassword).ToString(),
-                messageConfig.ResultQueue);
+            resultsConsumer.CreateConnectionToQueue(resultOptions);
 
-            oddsConsumer.CreateConnectionToQueue(QueueType.ExchangeDirect, new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.OddsUsername, messageConfig.OddsPassword).ToString(),
-                messageConfig.OddsQueue, "power-lines-accuracy-service");
+            var oddsConsumerOptions = new ConsumerOptions
+            {
+                Host = messageConfig.Host,
+                Port = messageConfig.Port,
+                Username = messageConfig.OddsUsername,
+                Password = messageConfig.OddsPassword,
+                QueueName = messageConfig.OddsQueue,
+                SubscriptionQueueName = "power-lines-odds-accuracy",
+                QueueType = QueueType.ExchangeDirect,
+                RoutingKey = "power-lines-accuracy-service" 
+            };
+
+            oddsConsumer.CreateConnectionToQueue(oddsConsumerOptions);
         }
 
         private void ReceiveResultMessage(string message)

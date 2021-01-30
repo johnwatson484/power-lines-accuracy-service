@@ -116,9 +116,18 @@ namespace PowerLinesAccuracyService.Accuracy
 
         public void CreateConnectionToQueue()
         {
+            var options = new SenderOptions
+            {
+                Host = messageConfig.Host,
+                Port = messageConfig.Port,
+                Username = messageConfig.AnalysisUsername,
+                Password = messageConfig.AnalysisPassword,
+                QueueName = messageConfig.AnalysisQueue,
+                QueueType = QueueType.Worker
+            };
+
             Task.Run(() =>
-                sender.CreateConnectionToQueue(QueueType.Worker, new BrokerUrl(messageConfig.Host, messageConfig.Port, messageConfig.AnalysisUsername, messageConfig.AnalysisPassword).ToString(),
-                    messageConfig.AnalysisQueue))
+                sender.CreateConnectionToQueue(options))
             .Wait();
         }
     }
