@@ -14,13 +14,14 @@ using PowerLinesMessaging;
 
 namespace PowerLinesAccuracyService.Accuracy
 {
-    public class AnalysisService : BackgroundService, IAnalysisService
+    public class AnalysisService : BackgroundService
     {
         private IServiceScopeFactory serviceScopeFactory;
         private IAnalysisApi analysisApi;
         private MessageConfig messageConfig;
         private Timer timer;
         private int frequencyInMinutes;
+        private IConnection connection;
         private ISender sender;
 
         public AnalysisService(IServiceScopeFactory serviceScopeFactory, IAnalysisApi analysisApi, MessageConfig messageConfig, int frequencyInMinutes = 60)
@@ -31,10 +32,48 @@ namespace PowerLinesAccuracyService.Accuracy
             this.frequencyInMinutes = frequencyInMinutes;
         }
 
+        public override Task StartAsync(CancellationToken stoppingToken)
+        {
+            CreateConnection();
+            CreateSender();
+
+            return base.StartAsync(stoppingToken);
+        }
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timer = new Timer(GetMatchOdds, null, TimeSpan.Zero, TimeSpan.FromMinutes(frequencyInMinutes));
             return Task.CompletedTask;
+        }
+
+        public override async Task StopAsync(CancellationToken cancellationToken)
+        {
+            await base.StopAsync(cancellationToken);
+            connection.CloseConnection();
+        }
+
+        protected void CreateConnection()
+        {
+            var options = new ConnectionOptions
+            {
+                Host = messageConfig.Host,
+                Port = messageConfig.Port,
+                Username = messageConfig.Username,
+                Password = messageConfig.Password
+            };
+            connection = new Connection(options);
+        }
+
+        protected void CreateSender()
+        {
+            var options = new SenderOptions
+            {
+                Name = messageConfig.AnalysisQueue,
+                QueueName = messageConfig.AnalysisQueue,
+                QueueType = QueueType.ExchangeFanout
+            };
+
+            sender = connection.CreateSenderChannel(options);
         }
 
         public void GetMatchOdds(object state)
@@ -105,30 +144,10 @@ namespace PowerLinesAccuracyService.Accuracy
 
         public void SendFixturesForAnalysis(List<Fixture> fixtures)
         {
-            sender = new Sender();
-            CreateConnectionToQueue();
-
             foreach (var fixture in fixtures)
             {
                 sender.SendMessage(new AnalysisMessage(fixture));
             }
-        }
-
-        public void CreateConnectionToQueue()
-        {
-            var options = new SenderOptions
-            {
-                Host = messageConfig.Host,
-                Port = messageConfig.Port,
-                Username = messageConfig.AnalysisUsername,
-                Password = messageConfig.AnalysisPassword,
-                QueueName = messageConfig.AnalysisQueue,
-                QueueType = QueueType.Worker
-            };
-
-            Task.Run(() =>
-                sender.CreateConnectionToQueue(options))
-            .Wait();
         }
     }
 }

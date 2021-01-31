@@ -9,7 +9,6 @@ using PowerLinesAccuracyService.Messaging;
 using Microsoft.EntityFrameworkCore;
 using PowerLinesAccuracyService.Analysis;
 using PowerLinesAccuracyService.Accuracy;
-using PowerLinesMessaging;
 
 namespace PowerLinesAccuracyService
 {
@@ -35,9 +34,7 @@ namespace PowerLinesAccuracyService
             var analysisUrl = Configuration.GetSection("AnalysisUrl").Get<AnalysisUrl>();
             services.AddSingleton(analysisUrl);
 
-            services.AddSingleton<IAnalysisApi, AnalysisApi>();            
-            services.AddTransient<IConsumer, Consumer>();
-            services.AddSingleton<ISender, Sender>();  
+            services.AddSingleton<IAnalysisApi, AnalysisApi>();
             services.AddScoped<IAccuracyApi, AccuracyApi>();
             services.AddControllers();
         }

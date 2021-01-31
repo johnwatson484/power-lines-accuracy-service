@@ -23,15 +23,13 @@ postgresService:
 message:
   host: host.docker.internal
   port: 5672
+  username: rabbitmq
+  password: rabbitmq
   analysisQueue: power-lines-analysis
-  analysisUsername: rabbitmq
-  analysisPassword: rabbitmq
   resultQueue: power-lines-results
-  resultUsername: rabbitmq
-  resultPassword: rabbitmq
+  resultSubscription: power-lines-results-accuracy
   oddsQueue: power-lines-odds
-  oddsUsername: rabbitmq
-  oddsPassword: rabbitmq
+  oddsSubscription: power-lines-odds-accuracy
 
 deployment:
   restartPolicy: Always

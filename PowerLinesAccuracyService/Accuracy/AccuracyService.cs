@@ -5,16 +5,13 @@ using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PowerLinesAccuracyService.Data;
-using PowerLinesAccuracyService.Models;
 using System.Collections.Generic;
-using PowerLinesAccuracyService.Messaging;
 using Microsoft.EntityFrameworkCore;
-using PowerLinesAccuracyService.Analysis;
 using PowerLinesAccuracyService.Extensions;
 
 namespace PowerLinesAccuracyService.Accuracy
 {
-    public class AccuracyService : BackgroundService, IAccuracyService
+    public class AccuracyService : BackgroundService
     {
         private IServiceScopeFactory serviceScopeFactory;
         private Timer timer;

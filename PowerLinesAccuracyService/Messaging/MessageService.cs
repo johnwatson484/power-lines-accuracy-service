@@ -11,65 +11,80 @@ using PowerLinesMessaging;
 
 namespace PowerLinesAccuracyService.Messaging
 {
-    public class MessageService : BackgroundService, IMessageService
+    public class MessageService : BackgroundService
     {
-        private IConsumer resultsConsumer;
-        private IConsumer oddsConsumer;
         private MessageConfig messageConfig;
         private IServiceScopeFactory serviceScopeFactory;
-        private ISender sender;
+        private IConnection connection;
+        private IConsumer resultConsumer;
+        private IConsumer oddsConsumer;
 
-        public MessageService(IConsumer resultsConsumer, IConsumer oddsConsumer, ISender sender, MessageConfig messageConfig, IServiceScopeFactory serviceScopeFactory)
+        public MessageService(MessageConfig messageConfig, IServiceScopeFactory serviceScopeFactory)
         {
-            this.resultsConsumer = resultsConsumer;
-            this.oddsConsumer = oddsConsumer;
             this.messageConfig = messageConfig;
             this.serviceScopeFactory = serviceScopeFactory;
-            this.sender = sender;
+        }
+
+        public override Task StartAsync(CancellationToken stoppingToken)
+        {
+            CreateConnection();
+            CreateResultConsumer();
+            CreateOddsConsumer();
+
+            return base.StartAsync(stoppingToken);
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
-        {            
-            Listen();
+        {
+            resultConsumer.Listen(new Action<string>(ReceiveResultMessage));
+            oddsConsumer.Listen(new Action<string>(ReceiveOddsMessage));
             return Task.CompletedTask;
         }
 
-        public void Listen()
+        public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            CreateConnectionToQueue();
-            resultsConsumer.Listen(new Action<string>(ReceiveResultMessage));
-            oddsConsumer.Listen(new Action<string>(ReceiveOddsMessage));
+            await base.StopAsync(cancellationToken);
+            connection.CloseConnection();
         }
 
-        public void CreateConnectionToQueue()
+        protected void CreateConnection()
         {
-            var resultOptions = new ConsumerOptions
+            var options = new ConnectionOptions
             {
                 Host = messageConfig.Host,
                 Port = messageConfig.Port,
-                Username = messageConfig.ResultUsername,
-                Password = messageConfig.ResultPassword,
+                Username = messageConfig.Username,
+                Password = messageConfig.Password
+            };
+            connection = new Connection(options);
+        }
+
+        protected void CreateResultConsumer()
+        {
+            var options = new ConsumerOptions
+            {
+                Name = messageConfig.ResultQueue,
                 QueueName = messageConfig.ResultQueue,
-                SubscriptionQueueName = "power-lines-results-accuracy",
-                QueueType = QueueType.ExchangeFanout            
+                SubscriptionQueueName = messageConfig.ResultSubscription,
+                QueueType = QueueType.ExchangeFanout
             };
 
-            resultsConsumer.CreateConnectionToQueue(resultOptions);
-
-            var oddsConsumerOptions = new ConsumerOptions
-            {
-                Host = messageConfig.Host,
-                Port = messageConfig.Port,
-                Username = messageConfig.OddsUsername,
-                Password = messageConfig.OddsPassword,
-                QueueName = messageConfig.OddsQueue,
-                SubscriptionQueueName = "power-lines-odds-accuracy",
-                QueueType = QueueType.ExchangeDirect,
-                RoutingKey = "power-lines-accuracy-service" 
-            };
-
-            oddsConsumer.CreateConnectionToQueue(oddsConsumerOptions);
+            resultConsumer = connection.CreateConsumerChannel(options);
         }
+
+        protected void CreateOddsConsumer()
+        {
+            var options = new ConsumerOptions
+            {
+                Name = messageConfig.OddsQueue,
+                QueueName = messageConfig.OddsQueue,
+                SubscriptionQueueName = messageConfig.OddsSubscription,
+                QueueType = QueueType.ExchangeDirect,
+                RoutingKey = "power-lines-accuracy-service"
+            };
+
+            oddsConsumer = connection.CreateConsumerChannel(options);
+        }        
 
         private void ReceiveResultMessage(string message)
         {
