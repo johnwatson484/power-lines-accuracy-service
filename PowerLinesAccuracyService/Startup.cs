@@ -9,6 +9,7 @@ using PowerLinesAccuracyService.Messaging;
 using Microsoft.EntityFrameworkCore;
 using PowerLinesAccuracyService.Analysis;
 using PowerLinesAccuracyService.Accuracy;
+using System;
 
 namespace PowerLinesAccuracyService
 {
@@ -26,7 +27,9 @@ namespace PowerLinesAccuracyService
         {
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(
-                    Configuration.GetConnectionString("PowerLinesAccuracyService")));
+                    Configuration.GetConnectionString("PowerLinesAccuracyService"), options =>
+                    options.EnableRetryOnFailure(5, TimeSpan.FromSeconds(5), null))
+                );
 
             var messageConfig = Configuration.GetSection("Message").Get<MessageConfig>();
             services.AddSingleton(messageConfig);
