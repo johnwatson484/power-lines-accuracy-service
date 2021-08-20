@@ -1,5 +1,7 @@
 [![Build Status](https://dev.azure.com/johnwatson484/John%20D%20Watson/_apis/build/status/Power%20Lines%20Accuracy%20Service?branchName=master)](https://dev.azure.com/johnwatson484/John%20D%20Watson/_build/latest?definitionId=38&branchName=master)
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=johnwatson484_power-lines-accuracy-service&metric=alert_status)](https://sonarcloud.io/dashboard?id=johnwatson484_power-lines-accuracy-service)
+
 # Power Lines Accuracy Service
 Accuracy testing service
 

@@ -13,9 +13,9 @@ namespace PowerLinesAccuracyService.Accuracy
 {
     public class AccuracyService : BackgroundService
     {
-        private IServiceScopeFactory serviceScopeFactory;
+        private readonly IServiceScopeFactory serviceScopeFactory;
         private Timer timer;
-        private int frequencyInMinutes;
+        private readonly int frequencyInMinutes;
 
         public AccuracyService(IServiceScopeFactory serviceScopeFactory, int frequencyInMinutes = 5)
         {
