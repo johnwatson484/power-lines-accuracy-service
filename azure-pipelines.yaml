@@ -9,10 +9,14 @@ resources:
     type: github
     endpoint: John D Watson
     name: johnwatson484/azure-devops-templates
+    ref: refs/tags/1
 
 extends:
   template: build.yaml@templates
   parameters:
-    repo: power-lines-accuracy-service
+    name: power-lines-accuracy-service
     project: PowerLinesAccuracyService
     framework: net
+    deploy: true
+    namespace: power-lines
+    hasSecureHelmValuesFile: true

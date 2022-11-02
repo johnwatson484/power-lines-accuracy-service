@@ -1,5 +1,0 @@
-{{- if .Values.postgresService.postgresExternalName }}
-{{- include "helm-library.postgres-service" (list . "power-lines-accuracy-service.postgres-service") -}}
-{{- end }}
-{{- define "power-lines-accuracy-service.postgres-service" -}}
-{{- end -}}
