@@ -1,3 +1,4 @@
+environment: production
 name: power-lines-accuracy-service
 image: power-lines-accuracy-service
 
