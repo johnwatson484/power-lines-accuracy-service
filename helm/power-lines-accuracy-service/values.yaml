@@ -22,4 +22,5 @@ message:
 
 deployment: {}
 
-secretsPath: /power-lines-accuracy-service
+secret:
+  secretsPath: /power-lines-accuracy-service
