@@ -1,11 +1,8 @@
 {{- include "helm-library.configmap" (list . "power-lines-accuracy-service.configmap") -}}
 {{- define "power-lines-accuracy-service.configmap" -}}
 data:
-  ConnectionStrings__PowerLinesAccuracyService: {{ quote .Values.container.connectionString }}
   Message__Host: {{ quote .Values.message.host }}
   Message__Port: {{ quote .Values.message.port }}
-  Message__Username: {{ quote .Values.message.username }}
-  Message__Password: {{ quote .Values.message.password }}
   Message__AnalysisQueue: {{ quote .Values.message.analysisQueue }}
   Message__ResultQueue: {{ quote .Values.message.resultQueue }}
   Message__ResultSubscription: {{ quote .Values.message.resultSubscription }}

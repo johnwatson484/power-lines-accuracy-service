@@ -19,4 +19,4 @@ extends:
     framework: net
     deploy: true
     namespace: power-lines
-    hasSecureHelmValuesFile: true
+    sonarcloud: false
