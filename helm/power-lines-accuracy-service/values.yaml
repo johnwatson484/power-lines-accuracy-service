@@ -21,3 +21,5 @@ message:
   oddsSubscription: power-lines-odds-accuracy
 
 deployment: {}
+
+secretsPath: /power-lines-accuracy-service
