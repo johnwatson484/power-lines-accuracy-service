@@ -20,6 +20,8 @@ services:
       - ./PowerLinesAccuracyService:/home/dotnet/PowerLinesAccuracyService
       - ./PowerLinesAccuracyService.Tests:/home/dotnet/PowerLinesAccuracyService.Tests
       - ./scripts:/home/dotnet/scripts
+    networks:
+      - power-lines
 
   power-lines-message:
     image: rabbitmq:3-management-alpine
@@ -33,6 +35,8 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672"
+    networks:
+      - power-lines
 
   power-lines-accuracy-service-postgres:
     image: postgres:11.4-alpine
@@ -44,6 +48,8 @@ services:
       - "6001:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - power-lines
 
 volumes:
   postgres_data: {}
