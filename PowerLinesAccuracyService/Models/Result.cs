@@ -1,8 +1,7 @@
-using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace PowerLinesAccuracyService.Models
-{
+namespace PowerLinesAccuracyService.Models;
+
     [Table("results")]
     public class Result
     {
@@ -58,4 +57,3 @@ namespace PowerLinesAccuracyService.Models
             Created = DateTime.UtcNow;
         }
     }
-}

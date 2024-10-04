@@ -1,11 +1,8 @@
-using System;
+namespace PowerLinesAccuracyService.Analysis;
 
-namespace PowerLinesAccuracyService.Analysis
+public class LastResultDate
 {
-    public class LastResultDate
-    {
-        public bool Available { get; set; }
+    public bool Available { get; set; }
 
-        public DateTime? Date { get; set; }
-    }
+    public DateTime? Date { get; set; }
 }

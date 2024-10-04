@@ -3,23 +3,18 @@ services:
     build:
       target: development
     depends_on: 
-      - power-lines-message
-      - power-lines-accuracy-service-postgres
-    entrypoint: >
-      sh -c "
-        scripts/wait-for.sh power-lines-message:5672 --
-        scripts/wait-for.sh power-lines-accuracy-service-postgres:6001 --
-        dotnet watch --project ./PowerLinesAccuracyService run"
+      power-lines-message:
+        condition: service_healthy
+      power-lines-accuracy-service-postgres:
+        condition: service_healthy
     ports:
       - "5001:5001"
     environment:
-      ConnectionStrings__PowerLinesAccuracyService: "Server=power-lines-accuracy-service-postgres;Port=5432;Database=power_lines_accuracy;User Id=postgres;Password=postgres;"
-      Message__Host: power-lines-message
-      AnalysisUrl__Endpoint: http://power-lines-analysis-service:5003
+      CONNECTIONSTRINGS__POWERLINESACCURACYSERVICE: "Server=power-lines-accuracy-service-postgres;Port=5432;Database=power_lines_accuracy;User Id=postgres;Password=postgres;"
+      MESSAGE__HOST: power-lines-message
+      ANALYSISURL__ENDPOINT: http://power-lines-analysis-service:5003
     volumes:
       - ./PowerLinesAccuracyService:/home/dotnet/PowerLinesAccuracyService
-      - ./PowerLinesAccuracyService.Tests:/home/dotnet/PowerLinesAccuracyService.Tests
-      - ./scripts:/home/dotnet/scripts
     networks:
       - power-lines
 
@@ -37,6 +32,12 @@ services:
       - "5672:5672"
     networks:
       - power-lines
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping --erlang-cookie rabbitmq
+      interval: 10s
+      retries: 5
+      start_period: 1s
+      timeout: 10s
 
   power-lines-accuracy-service-postgres:
     image: postgres:11.4-alpine
@@ -50,6 +51,12 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - power-lines
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      retries: 5
+      start_period: 1s
+      timeout: 10s
 
 volumes:
   postgres_data: {}

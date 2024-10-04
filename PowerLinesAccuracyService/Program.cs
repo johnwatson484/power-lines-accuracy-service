@@ -1,35 +1,49 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-using PowerLinesAccuracyService.Messaging;
+using Microsoft.EntityFrameworkCore;
 using PowerLinesAccuracyService.Accuracy;
+using PowerLinesAccuracyService.Analysis;
+using PowerLinesAccuracyService.Data;
+using PowerLinesAccuracyService.Messaging;
 
-namespace PowerLinesAccuracyService
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<MessageOptions>(builder.Configuration.GetSection(key: "Message"));
+builder.Services.Configure<AnalysisOptions>(builder.Configuration.GetSection(key: "AnalysisUrl"));
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PowerLinesAccuracyService"), options =>
+        options.EnableRetryOnFailure(5, TimeSpan.FromSeconds(5), null))
+    );
+
+builder.Services.AddSingleton<IAnalysisApi, AnalysisApi>();
+builder.Services.AddScoped<IAccuracyApi, AccuracyApi>();
+
+builder.Services.AddControllers();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddHostedService<MessageService>();
+builder.Services.AddHostedService<AnalysisService>();
+builder.Services.AddHostedService<AccuracyService>();
+
+var app = builder.Build();
+
+if (builder.Environment.IsDevelopment())
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
+    app.UseDeveloperExceptionPage();
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                })
-                .ConfigureServices(services =>
-                {
-                    services.AddHostedService<MessageService>();
-                    services.AddHostedService<AnalysisService>();
-                    services.AddHostedService<AccuracyService>();
-                });
-    }
+app.MapControllers();
+
+ApplyMigrations(app.Services);
+
+await app.RunAsync();
+
+void ApplyMigrations(IServiceProvider serviceProvider)
+{
+    using var scope = serviceProvider.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
 }

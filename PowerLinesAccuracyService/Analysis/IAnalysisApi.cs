@@ -1,10 +1,7 @@
-using System;
-using System.Threading.Tasks;
+namespace PowerLinesAccuracyService.Analysis;
 
-namespace PowerLinesAccuracyService.Analysis
+public interface IAnalysisApi
 {
-    public interface IAnalysisApi
-    {
-        Task<DateTime?> GetLastResultDate();
-    }
+    Task<DateTime?> GetLastResultDate();
 }
+

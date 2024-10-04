@@ -1,17 +1,10 @@
 using PowerLinesAccuracyService.Models;
 
-namespace PowerLinesAccuracyService.Analysis
+namespace PowerLinesAccuracyService.Analysis;
+
+public class AnalysisMessage(Fixture fixture)
 {
-    public class AnalysisMessage
-    {
-        public Fixture Fixture { get; set; }
+    public Fixture Fixture { get; set; } = fixture;
 
-        public string Sender { get; set; }
-
-        public AnalysisMessage(Fixture fixture)
-        {
-            Fixture = fixture;
-            Sender = "power-lines-accuracy-service";
-        }
-    }
+    public string Sender { get; set; } = "power-lines-accuracy-service";
 }

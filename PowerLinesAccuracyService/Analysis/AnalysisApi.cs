@@ -1,40 +1,28 @@
-using System;
-using System.Net.Http;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
-namespace PowerLinesAccuracyService.Analysis
+namespace PowerLinesAccuracyService.Analysis;
+
+public class AnalysisApi(IOptions<AnalysisOptions> analysisOptions) : IAnalysisApi
 {
-    public class AnalysisApi : IAnalysisApi
+    readonly AnalysisOptions analysisOptions = analysisOptions.Value;
+
+    public async Task<DateTime?> GetLastResultDate()
     {
-        AnalysisUrl analysisUrl;
+        DateTime? lastResultDate = null;
 
-        public AnalysisApi(AnalysisUrl analysisUrl)
+        try
         {
-            this.analysisUrl = analysisUrl;
+            using var httpClient = new HttpClient();
+            using var response = await httpClient.GetAsync(string.Format("{0}/{1}", analysisOptions.Endpoint, analysisOptions.LastResultDate));
+            string apiResponse = await response.Content.ReadAsStringAsync();
+            lastResultDate = JsonConvert.DeserializeObject<LastResultDate>(apiResponse).Date;
+        }
+        catch (Exception)
+        {
+            Console.WriteLine("Analysis API unavailable");
         }
 
-        public async Task<DateTime?> GetLastResultDate()
-        {
-            DateTime? lastResultDate = null;
-
-            try
-            {
-                using (var httpClient = new HttpClient())
-                {
-                    using (var response = await httpClient.GetAsync(string.Format("{0}/{1}", analysisUrl.Endpoint, analysisUrl.LastResultDate)))
-                    {
-                        string apiResponse = await response.Content.ReadAsStringAsync();
-                        lastResultDate = JsonConvert.DeserializeObject<LastResultDate>(apiResponse).Date;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Analysis API unavailable");
-            }
-
-            return lastResultDate;
-        }
+        return lastResultDate;
     }
 }
