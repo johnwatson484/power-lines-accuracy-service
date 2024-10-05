@@ -4,7 +4,7 @@ container:
   port: 5001
   comPlusEnableDiagnostics: 0
 
-config:
+configMap:
   environment: production
   analysisEndpoint: http://power-lines-analysis-service
 

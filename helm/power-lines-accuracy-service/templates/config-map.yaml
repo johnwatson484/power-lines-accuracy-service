@@ -9,6 +9,6 @@ data:
   MESSAGE__ODDSQUEUE: {{ quote .Values.message.oddsQueue }}
   MESSAGE__ODDSSUBSCRIPTION: {{ quote .Values.message.oddsSubscription }}
   COMPLUS_ENABLEDIAGNOSTICS: {{ quote .Values.container.comPlusEnableDiagnostics }}
-  ASPNETCORE_ENVIRONMENT: {{ quote .Values.config.environment }}
-  ANALYSISURL__ENDPOINT: {{ quote .Values.config.analysisEndpoint }}
+  ASPNETCORE_ENVIRONMENT: {{ quote .Values.configMap.environment }}
+  ANALYSISURL__ENDPOINT: {{ quote .Values.configMap.analysisEndpoint }}
 {{- end -}}
