@@ -11,10 +11,6 @@ RUN addgroup -g 1000 dotnet \
 USER dotnet
 WORKDIR /home/dotnet
 
-COPY --chown=dotnet:dotnet ./Directory.Build.props ./Directory.Build.props
-RUN mkdir -p /home/dotnet/PowerLinesAccuracyService/
-COPY --chown=dotnet:dotnet ./PowerLinesAccuracyService/*.csproj ./PowerLinesAccuracyService/
-RUN dotnet restore ./PowerLinesAccuracyService/PowerLinesAccuracyService.csproj
 COPY --chown=dotnet:dotnet . .
 
 RUN dotnet publish ./PowerLinesAccuracyService/ -c Release -o /home/dotnet/out
