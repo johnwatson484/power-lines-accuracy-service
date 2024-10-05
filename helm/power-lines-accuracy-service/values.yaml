@@ -1,14 +1,11 @@
-environment: production
-name: power-lines-accuracy-service
-image: power-lines-accuracy-service
-
 container:
-  requestMemory: 60Mi
-  requestCpu: 60m
-  limitMemory: 350Mi
-  limitCpu: 250m
+  image: power-lines-accuracy-service
+  resourceTier: L
   port: 5001
   comPlusEnableDiagnostics: 0
+
+config:
+  environment: production
   analysisEndpoint: http://power-lines-analysis-service
 
 message:
